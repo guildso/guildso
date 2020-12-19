@@ -10,6 +10,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
+use Carbon\Carbon;
 
 class User extends Authenticatable
 {
@@ -62,5 +63,77 @@ class User extends Authenticatable
     public function tasks()
     {
         return $this->hasMany('App\Models\Task');
+    }
+
+    public function shifts()
+    {
+        return $this->hasMany('App\Models\Shift');
+    }
+
+    public function startShift()
+    {
+        $shift = $this->shifts()->where('team_id', $this->currentTeam->id)->exists();
+
+        if ($shift) {
+            $shift = $this->shifts()->where('team_id', $this->currentTeam->id)->firstOrFail();
+            $shift->status = 'on';
+            $shift->started_at = new Carbon;
+            $shift->user_id = auth()->user()->id;
+            try {
+                $shift->update();
+                return true;
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        } else {
+            $shift = new Shift;
+            $shift->status = 'on';
+            $shift->started_at = new Carbon;
+            $shift->user_id = $this->id;
+            $shift->team_id = $this->currentTeam->id;
+            try {
+                $shift->save();
+                return true;
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
+    }
+
+    public function endShift()
+    {
+        $shift = $this->shifts()->where('team_id', $this->currentTeam->id)->whereNotNull('started_at')->firstOrFail();
+        $now = new Carbon;
+        $totalHours = $now->diffInMinutes($shift->started_at, true);
+        $totalHours = $totalHours/60;
+        $shift->total_hours += $totalHours;
+        $shift->status = 'off';
+        $shift->started_at = NULL;
+
+        try {
+            $shift->save();
+            return true;
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+
+    }
+
+    public function isOnShift()
+    {
+        $shift = $this->shifts()->where('team_id', $this->currentTeam->id)->where('status', 'on')->exists();
+        if ($shift) {
+            return true;
+        }
+        return false;
+    }
+
+    public function totalHoursWorked()
+    {
+        if ($this->shifts()->where('team_id', $this->currentTeam->id)->exists()) {
+            $shift = $this->shifts()->where('team_id', $this->currentTeam->id)->firstOrFail();
+            return round($shift->total_hours, 2);
+        }
+        return 0;
     }
 }

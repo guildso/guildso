@@ -77,7 +77,7 @@
                                                         Unassigned Task
                                                     </div>
                                                     <div class="text-sm text-gray-500">
-                                                        No one is working on this task yet! Feel free to take it!
+                                                        Feel free to take it!
                                                     </div>
                                                 </div>
                                                 @endif
@@ -99,7 +99,13 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
-                                            <button wire:click="assign({{ $task->id }})" class="text-indigo-600 hover:text-indigo-900">Assign</button>
+                                            <button wire:click="assign({{ $task->id }})" class="text-indigo-600 hover:text-indigo-900">
+                                                @if($task->user_id == auth()->user()->id)
+                                                    Unassign
+                                                @else
+                                                    Assign
+                                                @endif
+                                            </button>
                                             <button wire:click="edit({{ $task->id }})" class="text-indigo-600 hover:text-indigo-900">Edit</button>
                                             <button wire:click="delete({{ $task->id }})" class="text-indigo-600 hover:text-indigo-900">Delete</button>
                                         </td>

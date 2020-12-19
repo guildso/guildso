@@ -15,11 +15,17 @@
                     <x-jet-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-jet-nav-link>
-                    @if (Auth::user()->hasTeamRole( Auth::user()->currentTeam, 'manager'))
+                    <x-jet-nav-link href="{{ route('tasks') }}" :active="request()->routeIs('tasks')">
+                        {{ __('Manage Tasks') }}
+                    </x-jet-nav-link>
+                    <x-jet-nav-link href="{{ route('shifts') }}" :active="request()->routeIs('shifts')">
+                        {{ __('Shift') }}
+                    </x-jet-nav-link>
+                    {{-- @if (Auth::user()->hasTeamRole( Auth::user()->currentTeam, 'manager'))
                         <x-jet-nav-link href="{{ route('tasks') }}" :active="request()->routeIs('tasks')">
                             {{ __('Manage Tasks') }}
                         </x-jet-nav-link>
-                    @endif
+                    @endif --}}
                 </div>
             </div>
 

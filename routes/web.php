@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TasksController;
+use App\Http\Controllers\ShiftsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,8 @@ Route::group(['middleware' => config('jetstream.middleware', ['web'])], function
         // Tasks routes
         Route::get('/tasks/', [TasksController::class, 'index'])
                     ->name('tasks');
-
+        // Shifts
+        Route::get('/shifts/', [ShiftsController::class, 'index'])
+                    ->name('shifts');
     });
 });

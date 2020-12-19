@@ -21,7 +21,7 @@ class Tasks extends Component
      */
     public function render()
     {
-        $this->tasks = Task::all();
+        $this->tasks = Task::where('team_id', auth()->user()->currentTeam->id)->get();
         return view('livewire.tasks');
     }
   
@@ -119,6 +119,8 @@ class Tasks extends Component
     {
         $task = Task::find($id);
         if (!$task->user_id) {
+            $task->user_id = auth()->user()->id;
+        } elseif($task->user_id != auth()->user()->id) {
             $task->user_id = auth()->user()->id;
         } else {
             $task->user_id = NULL;
