@@ -38,4 +38,13 @@ class Team extends JetstreamTeam
         'updated' => TeamUpdated::class,
         'deleted' => TeamDeleted::class,
     ];
+
+       public function teamShifts()
+    {
+        $users = auth()->user()->currentTeam->users()->with('shifts')->get();
+        $teamOwner = auth()->user()->currentTeam->owner()->with('shifts')->FirstOrFail();
+        $users->push($teamOwner);
+        return $users;
+    }
+
 }
