@@ -3,6 +3,7 @@
 namespace App\Http\Livewire;
 use App\Models\Task;
 use Livewire\Component;
+use Livewire\Event;
 
 class Tasks extends Component
 {
@@ -42,16 +43,20 @@ class Tasks extends Component
      */
     public function store()
     {
-        $this->validate();
-        $task = new Task;
-        $task->team_id = auth()->user()->currentTeam->id;
-        $task->name = $this->name;
-        $task->description = $this->description;
-        $task->save();
+        if (auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'create')) {
+            $this->validate();
+            $task = new Task;
+            $task->team_id = auth()->user()->currentTeam->id;
+            $task->name = $this->name;
+            $task->description = $this->description;
+            $task->save();
 
-        session()->flash('message', 'Task Created Successfully.');
+            $this->dispatchBrowserEvent('notification', ['type' => 'success', 'message' => 'Task Created Successfully!']);
 
-        $this->resetInputFields();
+            $this->resetInputFields();
+        } else {
+            $this->dispatchBrowserEvent('notification', ['type' => 'error', 'message' => 'You do not have permissions to add tasks to this team!']);
+        }
     }
 
     /**
@@ -61,12 +66,18 @@ class Tasks extends Component
      */
     public function edit($id)
     {
-        $task = Task::findOrFail($id);
-        $this->task_id = $id;
-        $this->name = $task->name;
-        $this->description = $task->description;
+        if (auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update')) {
+            $task = Task::findOrFail($id);
+            $this->task_id = $id;
+            $this->name = $task->name;
+            $this->description = $task->description;
 
-        $this->updateMode = true;
+            $this->updateMode = true;
+
+        } else {
+            $this->dispatchBrowserEvent('notification', ['type' => 'error', 'message' => 'You do not have permissions to edit tasks!']);
+        }
+
     }
 
     /**
@@ -87,23 +98,27 @@ class Tasks extends Component
      */
     public function update()
     {
-        $validatedDate = $this->validate([
-            'name' => 'required',
-            'description' => 'required',
-        ]);
-  
-        $task = Task::find($this->task_id);
-        $task->update([
-            'name' => $this->name,
-            'description' => $this->description,
-        ]);
-  
-        $this->updateMode = false;
-  
-        session()->flash('message', 'Task Updated Successfully.');
-        $this->resetInputFields();
+        if (auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update')) {
+            $validatedDate = $this->validate([
+                'name' => 'required',
+                'description' => 'required',
+            ]);
+
+            $task = Task::find($this->task_id);
+            $task->update([
+                'name' => $this->name,
+                'description' => $this->description,
+            ]);
+
+            $this->updateMode = false;
+
+            $this->resetInputFields();
+            $this->dispatchBrowserEvent('notification', ['type' => 'success', 'message' => 'Task Updated Successfully!']);
+        } else {
+            $this->dispatchBrowserEvent('notification', ['type' => 'error', 'message' => 'You do not have permissions to edit tasks!']);
+        }
     }
-   
+
     /**
      * The attributes that are mass assignable.
      *
@@ -111,8 +126,12 @@ class Tasks extends Component
      */
     public function delete($id)
     {
-        Task::find($id)->delete();
-        session()->flash('message', 'Task Deleted Successfully.');
+        if (auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'delete')) {
+            Task::find($id)->delete();
+            $this->dispatchBrowserEvent('notification', ['type' => 'warning', 'message' => 'You have deleted the task!']);
+        } else {
+            $this->dispatchBrowserEvent('notification', ['type' => 'error', 'message' => 'You do not have permissions to delete tasks!']);
+        }
     }
 
     public function assign($id)
@@ -120,12 +139,14 @@ class Tasks extends Component
         $task = Task::find($id);
         if (!$task->user_id) {
             $task->user_id = auth()->user()->id;
+            $this->dispatchBrowserEvent('notification', ['type' => 'success', 'message' => 'You have assigned the task to yourself!']);
         } elseif($task->user_id != auth()->user()->id) {
             $task->user_id = auth()->user()->id;
+            $this->dispatchBrowserEvent('notification', ['type' => 'success', 'message' => 'You have assigned the task to yourself!']);
         } else {
             $task->user_id = NULL;
+            $this->dispatchBrowserEvent('notification', ['type' => 'notice', 'message' => 'You have unassigned the task!']);
         }
         $task->save();
-        session()->flash('message', 'Task Successfully Assigned.');
     }
 }

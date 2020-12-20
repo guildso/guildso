@@ -107,7 +107,9 @@
                                                 @endif
                                             </button>
                                             <button wire:click="edit({{ $task->id }})" class="text-indigo-600 hover:text-indigo-900">Edit</button>
+                                            @if(auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'delete'))
                                             <button wire:click="delete({{ $task->id }})" class="text-indigo-600 hover:text-indigo-900">Delete</button>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

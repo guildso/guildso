@@ -30,12 +30,14 @@ class Shifts extends Component
     {
         auth()->user()->startShift();
         $this->status = 'On Shift';
+        $this->dispatchBrowserEvent('notification', ['type' => 'success', 'message' => 'You are now on shift!']);
     }
 
     public function endShift()
     {
         auth()->user()->endShift();
         $this->status = 'Not On Shift';
+        $this->dispatchBrowserEvent('notification', ['type' => 'success', 'message' => 'You have ended your shift!']);
     }
 
     public function changeShiftStatus()
